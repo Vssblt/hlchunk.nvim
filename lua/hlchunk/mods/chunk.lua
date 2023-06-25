@@ -125,14 +125,14 @@ function chunk_mod:enable_mod_autocmd()
             chunk_mod:render()
         end,
     })
-    api.nvim_create_autocmd({ "TextChangedI", "CursorMovedI" }, {
+    api.nvim_create_autocmd({ "TextChangedI", "CursorHoldI" }, {
         group = self.augroup_name,
         pattern = self.options.support_filetypes,
         callback = function()
             chunk_mod:render()
         end,
     })
-    api.nvim_create_autocmd({ "CursorMoved" }, {
+    api.nvim_create_autocmd({ "CursorHold" }, {
         group = self.augroup_name,
         pattern = self.options.support_filetypes,
         callback = function()

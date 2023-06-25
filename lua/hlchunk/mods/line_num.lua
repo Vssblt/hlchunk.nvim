@@ -40,7 +40,7 @@ end
 function line_num_mod:enable_mod_autocmd()
     BaseMod.enable_mod_autocmd(self)
 
-    api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
         group = self.augroup_name,
         pattern = self.options.support_filetypes,
         callback = function()
