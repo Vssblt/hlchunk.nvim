@@ -67,23 +67,17 @@ function LineNumMod:createAutocmd()
         self:render(cur_chunk_range)
     end
     local db_render_cb = debounce(render_cb, self.conf.delay, false)
-    local db_render_cb_with_pre_hook
+    local render_callback
     if self.conf.delay == 0 then
-      db_render_cb_with_pre_hook = render_cb
+      render_callback = render_cb
     else
-      db_render_cb_with_pre_hook = function(event)
-          local bufnr = event.buf
-          if not self:shouldRender(bufnr) then
-              return
-          end
+      render_callback = function(event)
           db_render_cb(event)
       end
     end
     api.nvim_create_autocmd({ "CursorMovedI", "CursorMoved" }, {
         group = self.meta.augroup_name,
-        callback = function(e)
-            db_render_cb_with_pre_hook(e)
-        end,
+        callback = render_callback,
     })
 end
 
