@@ -2,6 +2,8 @@ local BaseMod = require("hlchunk.mods.base_mod")
 local LineNumConf = require("hlchunk.mods.line_num.line_num_conf")
 local chunkHelper = require("hlchunk.utils.chunkHelper")
 local class = require("hlchunk.utils.class")
+local debounce = require("hlchunk.utils.timer").debounce
+local debounce_throttle = require("hlchunk.utils.timer").debounce_throttle
 
 local api = vim.api
 local CHUNK_RANGE_RET = chunkHelper.CHUNK_RANGE_RET
@@ -15,7 +17,7 @@ local constructor = function(self, conf, meta)
         hl_base_name = "HLLineNum",
         ns_id = api.nvim_create_namespace("line_num"),
     }
-
+    
     BaseMod.init(self, conf, meta)
     self.meta = vim.tbl_deep_extend("force", default_meta, meta or {})
     self.conf = LineNumConf(conf)
@@ -47,21 +49,40 @@ end
 function LineNumMod:createAutocmd()
     BaseMod.createAutocmd(self)
 
-    api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    local render_cb = function(event)
+        local bufnr = event.buf
+        if not api.nvim_buf_is_valid(bufnr) then
+            return
+        end
+        local winnr = api.nvim_get_current_win()
+        local pos = api.nvim_win_get_cursor(winnr)
+        local retcode, cur_chunk_range = chunkHelper.get_chunk_range({
+            pos = { bufnr = bufnr, row = pos[1] - 1, col = pos[2] },
+            use_treesitter = self.conf.use_treesitter,
+        })
+        self:clear({ bufnr = bufnr, start = 0, finish = api.nvim_buf_line_count(bufnr) })
+        if retcode ~= CHUNK_RANGE_RET.OK then
+            return
+        end
+        self:render(cur_chunk_range)
+    end
+    local db_render_cb = debounce(render_cb, self.conf.delay, false)
+    local db_render_cb_with_pre_hook
+    if self.conf.delay == 0 then
+      db_render_cb_with_pre_hook = render_cb
+    else
+      db_render_cb_with_pre_hook = function(event)
+          local bufnr = event.buf
+          if not self:shouldRender(bufnr) then
+              return
+          end
+          db_render_cb(event)
+      end
+    end
+    api.nvim_create_autocmd({ "CursorMovedI", "CursorMoved" }, {
         group = self.meta.augroup_name,
-        callback = function(event)
-            local bufnr = event.buf
-            local winnr = api.nvim_get_current_win()
-            local pos = api.nvim_win_get_cursor(winnr)
-            local retcode, cur_chunk_range = chunkHelper.get_chunk_range({
-                pos = { bufnr = bufnr, row = pos[1] - 1, col = pos[2] },
-                use_treesitter = self.conf.use_treesitter,
-            })
-            self:clear({ bufnr = bufnr, start = 0, finish = api.nvim_buf_line_count(bufnr) })
-            if retcode ~= CHUNK_RANGE_RET.OK then
-                return
-            end
-            self:render(cur_chunk_range)
+        callback = function(e)
+            db_render_cb_with_pre_hook(e)
         end,
     })
 end

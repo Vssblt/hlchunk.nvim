@@ -16,7 +16,11 @@ local default_conf = {
 }
 ```
 
-独有的配置项为 `use_treesitter`，用法和 chunk 的该项一样，详情见 [chunk](./chunk.md)
+独有的配置项为 `use_treesitter` 和 `delay`
+
+- `use_treesitter` 用法和 chunk 的该项一样，详情见 [chunk](./chunk.md)
+
+- `delay` 移动光标时的抖动延迟，以毫秒为单位，默认为 0， 立即重绘。设置适当的延迟可以提升性能。
 
 和 chunk 一样，我们需要额外注意 style 这个通用配置：他只接收一个字符串，表示十六进制颜色，来表示行号的颜色
 

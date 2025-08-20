@@ -12,12 +12,14 @@ local LineNumConf = class(BaseConf, function(self, conf)
         style = "#806d9c",
         priority = 10,
         use_treesitter = false,
+        delay = 0
     }
     conf = vim.tbl_deep_extend("force", default_conf, conf or {}) --[[@as HlChunk.LineNumConf]]
     BaseConf.init(self, conf)
 
     self.style = conf.style
     self.use_treesitter = conf.use_treesitter
+    self.delay = conf.delay
 end)
 
 return LineNumConf
