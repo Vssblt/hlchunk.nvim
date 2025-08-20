@@ -71,9 +71,7 @@ function LineNumMod:createAutocmd()
     if self.conf.delay == 0 then
       render_callback = render_cb
     else
-      render_callback = function(event)
-          db_render_cb(event)
-      end
+      render_callback = db_render_cb
     end
     api.nvim_create_autocmd({ "CursorMovedI", "CursorMoved" }, {
         group = self.meta.augroup_name,
